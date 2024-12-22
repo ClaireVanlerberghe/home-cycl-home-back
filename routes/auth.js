@@ -12,16 +12,18 @@ const JWT_SECRET = process.env.JWT_SECRET;
 
 // Route : Inscription
 router.post('/signup', async (req, res) => {
-  const { name, email, password } = req.body;
+  const { email, firstName, lastName, address, phone, password } = req.body;
 
   try {
     const user = await authModule.findUserByEmail(email);
-    if (user) return res.status(400).send('Cet utilisateur existe déjà.');
+    if (user) {
+      return res.status(400).send('Cet utilisateur existe déjà.');
+    }
 
     const hashedPassword = await bcrypt.hash(password, 10);
     console.log('hashPassword', hashedPassword)
 
-    const userId = await authModule.createUser(name, email, hashedPassword);
+    const userId = await authModule.createUser(email, firstName, lastName, address, phone, hashedPassword);
     res.status(201).send({ message: 'Utilisateur créé avec succès', userId });
   } catch (error) {
     console.error(error);
@@ -68,6 +70,29 @@ router.post('/login', async (req, res) => {
 // Route : Test des tokens protégés
 router.get('/profile', verifyToken, (req, res) => {
   res.send({ message: 'Accès autorisé', user: req.user });
+});
+
+// Route : Changement adresse du user
+router.post('/address', async (req, res) => {
+  const { address, email } = req.body;
+
+  try {
+    console.log("req.Body", req.body);
+
+    // Récupération de l'utilisateur
+    const user = await authModule.findUserByEmail(email);
+    if (!user) {
+      return res.status(404).json({ message: "Utilisateur introuvable" });
+    }
+
+    console.log("Utilisateur trouvé:", user);
+
+    const newAddress = await authModule.updateAddress(email, address);
+    res.status(201).send({ message: 'Adresse changé avec succès', newAddress });
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Erreur serveur');
+  }
 });
 
 module.exports = router;
