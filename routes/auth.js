@@ -4,10 +4,10 @@ const jwt = require('jsonwebtoken');
 const authModule = require('../modules/auth');
 require('dotenv').config()
 const { verifyToken } = require('../utils/jwt');
+const req = require('express/lib/request');
 
 const router = express.Router();
 
-// Clé secrète pour signer les tokens JWT
 const JWT_SECRET = process.env.JWT_SECRET;
 
 // Route : Inscription
@@ -59,7 +59,7 @@ router.post('/login', async (req, res) => {
         { expiresIn: "1h" }
       );
   
-      return res.status(200).json({ token, user: { id: user.Id_user, email: user.email } });
+      return res.status(200).json({ token, user: { id: user.Id_user, email: user.email, address: user.address } });
   
     } catch (error) {
       console.error("Erreur lors de la connexion :", error);
@@ -94,5 +94,19 @@ router.post('/address', async (req, res) => {
     res.status(500).send('Erreur serveur');
   }
 });
+
+// Route : Récupération utilisateur
+router.get('/getUser', async (req, res) => {
+  const email = req.query;
+console.log('email', req.query)
+  const user = await authModule.findUserByEmail(email)
+  if(!user) {
+    return res.status(404).json({ message: "Utilisateur introuvable" });
+  }
+  console.log("Utilisateur trouvé:", user);
+
+  return res.status(200).json({ user })
+
+})
 
 module.exports = router;

@@ -1,15 +1,15 @@
 const db = require('../db');
 
 module.exports = {
-  findUserByEmail: async (email) => {
+  findUserByEmail: async (emailObj) => {
       try {
-
+        const email = emailObj.email || '';
         const [users] = await db.query('SELECT * FROM users WHERE email = ?', [email]);
-  
+        console.log('userback', users)
         if (!users || users.length === 0) {
+          console.log('test')
           return null;
         }
-        
         return users[0];
       } catch (error) {
         console.error('Erreur lors de la récupération de l\'utilisateur :', error);
